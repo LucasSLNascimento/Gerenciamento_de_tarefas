@@ -66,7 +66,7 @@ def dashboard():
     tasks = Task.query.all()
     return render_template('dashboard.html', tasks=tasks, users=users, user=current_user)
 
-@app.route('/tasks')
+@app.route('/tasks', methods=['GET', 'POST'])
 @login_required
 def user_tasks():
     from models import User, Task
@@ -77,19 +77,30 @@ def user_tasks():
 
     form.assigned_user.choices = [(user.id, user.username) for user in users]
 
-    if form.validate_on_submit():
+    # Filtrar tarefas pelo status (caso o usuário selecione um filtro)
+    status_filter = request.args.get('status_filter')
+
+    # Query base para filtrar as tarefas do usuário logado
+    query = Task.query.filter_by(user_id=current_user.id)
+
+    if status_filter:  # Se houver um filtro de status, aplique-o à query
+        query = query.filter_by(status=status_filter)
+
+    tasks = query.all()
+
+    if form.validate_on_submit():  # Tratamento de criação de nova tarefa
         task = Task(
-            task_name = form.task_name.data,
-            description = form.description.data,
-            status = form.status.data,
-            assigned_user_id = form.assigned_user.data,
+            task_name=form.task_name.data,
+            description=form.description.data,
+            status=form.status.data,
+            assigned_user_id=form.assigned_user.data,
         )
         db.session.add(task)
         db.session.commit()
         return redirect(url_for('user_tasks'))
 
-    tasks = Task.query.filter_by(user_id=current_user.id).all()
     return render_template('tasks.html', tasks=tasks, form=form, users=users)
+
 
 @app.route('/create_task', methods=['POST'])
 @login_required

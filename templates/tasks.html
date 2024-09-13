@@ -14,8 +14,21 @@
         <h1 class="text-center mb-4">Tarefas do {{ current_user.username }}</h1>
 
         <!-- Botão para abrir o modal de criação de tarefa -->
-        <div class="d-flex justify-content-end mb-4">
+        <div class="d-flex justify-content-between mb-4">
             <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createTaskModal">Criar Tarefa</button>
+
+            <!-- Dropdown para filtrar tarefas por status -->
+            <form method="GET" action="{{ url_for('user_tasks') }}">
+                <div class="input-group">
+                    <select class="form-select" name="status_filter">
+                        <option value="">Todos os Status</option>
+                        <option value="Pendente">Pendente</option>
+                        <option value="Em Andamento">Em Andamento</option>
+                        <option value="Concluída">Concluída</option>
+                    </select>
+                    <button type="submit" class="btn btn-outline-secondary">Filtrar</button>
+                </div>
+            </form>
         </div>
 
         <!-- Verifica se há tarefas -->
