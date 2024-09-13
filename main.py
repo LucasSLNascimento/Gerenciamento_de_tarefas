@@ -1,4 +1,4 @@
-from flask import render_template, redirect, url_for
+from flask import render_template, redirect, url_for, request
 from flask_login import login_required, login_user, logout_user, current_user
 from config import app
 from models import *
@@ -61,13 +61,58 @@ def logout():
 @app.route('/dashboard')
 @login_required
 def dashboard():
+    users = User.query.all()
     tasks = Task.query.all()
-    return render_template('dashboard.html', tasks=tasks)
+    return render_template('dashboard.html', tasks=tasks, users=users, user=current_user)
 
-@app.route('/user_tasks')
+@app.route('/tasks')
 @login_required
-def user_profile():
-    return render_template('profile.html', user=current_user)
+def user_tasks():
+    from models import User, Task
+    from forms import TaskForm
+
+    users = User.query.all()
+    form = TaskForm()
+
+    form.assigned_user.choices = [(user.id, user.username) for user in users]
+
+    if form.validate_on_submit():
+        task = Task(
+            task_name = form.task_name.data,
+            description = form.description.data,
+            status = form.status.data,
+            assigned_user_id = form.assigned_user.data,
+        )
+        db.session.add(task)
+        db.session.commit()
+        return redirect(url_for('user_tasks'))
+
+    tasks = Task.query.filter_by(user_id=current_user.id).all()
+    return render_template('tasks.html', tasks=tasks, form=form, users=users)
+
+@app.route('/create_task', methods=['POST'])
+@login_required
+def create_task():
+    task_name = request.form.get('task_name')
+    description = request.form.get('description')
+    status = request.form.get('status')
+    assigned_user_id = request.form.get('assigned_user')
+
+    if task_name and description and assigned_user_id:
+        new_task = Task(
+            task_name=task_name,
+            description=description,
+            status=status,
+            user_id=assigned_user_id  # O responsável pela tarefa é o usuário selecionado
+        )
+        db.session.add(new_task)
+        db.session.commit()
+        return redirect(url_for('user_tasks'))
+
+    # Se for GET, exibe o formulário e lista os usuários
+    users = User.query.all()  # Lista todos os usuários
+    return render_template('create_task.html', users=users)
+
 
 
 if __name__ == '__main__':

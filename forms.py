@@ -1,5 +1,6 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField, DateField, TextAreaField
+from wtforms.fields.choices import SelectField
 from wtforms.validators import DataRequired, Length
 
 class RegisterForm(FlaskForm):
@@ -15,4 +16,11 @@ class LoginForm(FlaskForm):
 class TaskForm(FlaskForm):
     task_name = StringField('Nome da tarefa', validators=[DataRequired()])
     description = TextAreaField('Descrção', validators=[DataRequired()])
+    status = SelectField('status', choices=[
+        ('Pendente', 'Pendente'),
+        ('Em Andamento', 'Em Andamento'),
+        ('Concluída', 'Concluída')
+    ], validators=[DataRequired()])
+    assigned_user = SelectField('Responsável pela tarefa', coerce=int, validators=[DataRequired()])
+    submit = SubmitField('Criar tarefa')
 
