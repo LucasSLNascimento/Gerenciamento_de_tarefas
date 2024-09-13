@@ -15,7 +15,7 @@ class LoginForm(FlaskForm):
 
 class TaskForm(FlaskForm):
     task_name = StringField('Nome da tarefa', validators=[DataRequired()])
-    description = TextAreaField('Descrção', validators=[DataRequired()])
+    description = TextAreaField('Descrição', validators=[DataRequired()])
     status = SelectField('status', choices=[
         ('Pendente', 'Pendente'),
         ('Em Andamento', 'Em Andamento'),
