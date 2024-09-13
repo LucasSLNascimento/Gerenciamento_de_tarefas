@@ -1,6 +1,7 @@
-from flask import render_template, redirect, url_for, request
+from flask import render_template, redirect, url_for, request, flash
 from flask_login import login_required, login_user, logout_user, current_user
 from config import app
+from forms import TaskForm
 from models import *
 
 
@@ -109,9 +110,38 @@ def create_task():
         db.session.commit()
         return redirect(url_for('user_tasks'))
 
-    # Se for GET, exibe o formulário e lista os usuários
-    users = User.query.all()  # Lista todos os usuários
+    users = User.query.all()
     return render_template('create_task.html', users=users)
+
+@app.route('/edit_task/<int:task_id>', methods=['GET', 'POST'])
+@login_required
+def edit_task(task_id):
+    task = Task.query.get_or_404(task_id)
+
+    form = TaskForm(obj=task)
+    form.assigned_user.choices = [(user.id, user.username) for user in User.query.all()]
+
+    if form.validate_on_submit():
+        task.task_name = form.task_name.data
+        task.description = form.description.data
+        task.status = form.status.data
+        task.user_id = form.assigned_user.data
+
+        db.session.commit()
+        flash('Tarefa atualizada com sucesso!', 'success')
+        return redirect(url_for('dashboard'))
+
+    return render_template('edit_task.html', form=form, task=task)
+
+
+@app.route('/delete_task/<int:task_id>', methods=['POST'])
+def delete_task(task_id):
+    task = Task.query.get_or_404(task_id)
+
+    db.session.delete(task)
+    db.session.commit()
+    flash('Tarefa excluída com sucesso!', 'success')
+    return redirect(url_for('dashboard'))
 
 
 
